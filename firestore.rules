@@ -1,0 +1,55 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Users collection rules
+    match /users/{userId} {
+      // Kullanıcılar sadece kendi profillerini okuyabilir ve güncelleyebilir
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+      
+      // Adminler tüm kullanıcıları okuyabilir ve güncelleyebilir
+      allow read, write: if request.auth != null && 
+        exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+    }
+    
+    // Products collection rules (gelecekte eklenebilir)
+    match /products/{productId} {
+      // Herkes ürünleri okuyabilir
+      allow read: if true;
+      
+      // Sadece adminler ürün ekleyebilir, güncelleyebilir, silebilir
+      allow write: if request.auth != null && 
+        exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+    }
+    
+    // Orders collection rules (gelecekte eklenebilir)
+    match /orders/{orderId} {
+      // Kullanıcılar sadece kendi siparişlerini görebilir
+      allow read, write: if request.auth != null && 
+        (resource.data.userId == request.auth.uid ||
+         (exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
+          get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin'));
+    }
+    
+    // Default rule: Deny all other access
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Authenticated users can read and write their own data
+    match /users/{userId} {
+      allow read, write: if request.auth != null;
+    }
+    
+    // Temporary rule - allow all authenticated users for testing
+    match /{document=**} {
+      allow read, write: if request.auth != null;
+    }
+  }
+}

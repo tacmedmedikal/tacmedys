@@ -1,0 +1,15 @@
+{
+  "projects": {
+    "default": "tacmedikal-app"
+  },
+  "targets": {
+    "tacmedikal-app": {
+      "hosting": {
+        "app": [
+          "tacmedikal-app"
+        ]
+      }
+    }
+  },
+  "etags": {}
+}
